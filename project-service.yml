@@ -1,0 +1,108 @@
+spring:
+  sleuth:
+    sampler:
+      probability: 1
+  zipkin:
+    base-url: http://${LOG_TRACE_SERVICE}:9411
+  application:
+    name: project-service
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+  datasource:
+    url: jdbc:postgresql://${PROJECT_DB_URL}
+    username: ${PROJECT_DB_USERNAME}
+    password: ${PROJECT_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    initialization-mode: always
+
+server:
+  port: 8082
+
+keycloak:
+  realm: cydeo-dev
+  auth-server-url: http://${KEYCLOAK}:8080/auth
+  ssl-required: none
+  resource: ticketing-app
+  credentials:
+    secret: ${CLIENT_SECRET}
+  use-resource-role-mappings: true
+  bearer-only: true
+
+master:
+  user:
+    username: ${MASTER_USER}
+    password: ${MASTER_PASSWORD}
+  realm: master
+  client: master-client
+
+eureka:
+  instance:
+    preferIpAddress: true
+    ipAddress: ${HOST}
+    status-page-url-path: ${management.context-path}/info
+    health-check-url-path: ${management.context-path}/health
+  client:
+    serviceUrl:
+      defaultZone: http://${DISCOVERY_SERVICE}:8761/eureka/
+
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  context-path: http://${HOST}:${server.port}/actuator
+
+info:
+  application:
+    name: project-service
+    description: Ticketing Application Project Service
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      project-service:
+        baseConfig: default
+      task-service:
+        baseConfig: default
+        waitDurationInOpenState: 20000
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        permittedNumberOfCallsInHalfOpenState: 2
+  retry:
+    instances:
+      project-service:
+        baseConfig: default
+      task-service:
+        baseConfig: default
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 200
+  ratelimiter:
+    instances:
+      project-service:
+        baseConfig: default
+      task-service:
+        baseConfig: default
+    configs:
+      default:
+        limitRefreshPeriod: 50000
+        limitForPeriod: 5
+        timeout-duration: 20000

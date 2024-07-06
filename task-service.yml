@@ -1,0 +1,70 @@
+spring:
+  sleuth:
+    sampler:
+      probability: 1
+  zipkin:
+    base-url: http://${LOG_TRACE_SERVICE}:9411
+  application:
+    name: task-service
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+  datasource:
+    url: jdbc:postgresql://${TASK_DB_URL}
+    username: ${TASK_DB_USERNAME}
+    password: ${TASK_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    initialization-mode: always
+
+server:
+  port: 8083
+
+keycloak:
+  realm: cydeo-dev
+  auth-server-url: http://${KEYCLOAK}:8080/auth
+  ssl-required: none
+  resource: ticketing-app
+  credentials:
+    secret: ${CLIENT_SECRET}
+  use-resource-role-mappings: true
+  bearer-only: true
+
+master:
+  user:
+    username: ${MASTER_USER}
+    password: ${MASTER_PASSWORD}
+  realm: master
+  client: master-client
+
+eureka:
+  instance:
+    preferIpAddress: true
+    ipAddress: ${HOST}
+    status-page-url-path: ${management.context-path}/info
+    health-check-url-path: ${management.context-path}/health
+  client:
+    serviceUrl:
+      defaultZone: http://${DISCOVERY_SERVICE}:8761/eureka/
+
+management:
+  endpoint:
+    health:
+      show-details: "ALWAYS"
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  context-path: http://${HOST}:${server.port}/actuator
+
+info:
+  application:
+    name: task-service
+    description: Ticketing Application Task Service
